@@ -11,13 +11,14 @@
 
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 <script>
+    console.log("new")
     var chatText = document.getElementById("chat-text");
     var chatInput = document.getElementById("chat-input");
     var chatForm = document.getElementById("chat-form");
     
     var ctx = document.getElementById("ctx").getContext("2d");
     ctx.font="30px Arial";
-    var socket = io();
+    var socket = io("/", {transports:['websocket']});
     
     socket.on("newPosition",function(data){
         ctx.clearRect(0,0,500,500);
@@ -32,6 +33,11 @@
     socket.on("addToChat", function(data){
         chatText.innerHTML+= "<div>" + data + "</div>";
     })
+     socket.on('message', function (data) {
+         console.log("yes, we hear you")
+       io.sockets.to(data.toUsername).emit('message', data.data);
+     });
+    
     
     document.onkeydown = function(event){
         if(event.keyCode ===68){
@@ -57,6 +63,7 @@
             socket.emit("keyPress",{inputId:"up",state:false});
         }
     }
+    
 </script>
 
 <button onclick="happy()">Happy</button>

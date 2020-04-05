@@ -11,6 +11,10 @@
 
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 <script>
+    var chatText = document.getElementById("chat-text");
+    var chatInput = document.getElementById("chat-input");
+    var chatForm = document.getElementById("chat-form");
+    
     var ctx = document.getElementById("ctx").getContext("2d");
     ctx.font="30px Arial";
     var socket = io();
@@ -24,6 +28,11 @@
             ctx.fillRect(data.bullet[i].x-5,data.bullet[i].y-5,10,10);
         } 
     });
+    
+    socket.on("addToChat", function(data){
+        chatText.innerHTML+= "<div>" + data + "</div>";
+    })
+    
     document.onkeydown = function(event){
         if(event.keyCode ===68){
             socket.emit("keyPress",{inputId:"right",state:true});

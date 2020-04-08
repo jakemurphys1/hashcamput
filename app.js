@@ -3,6 +3,7 @@ console.log("hello world")
 var express = require("express");
 var app = express();
 var serv = require("http").Server(app);
+var io = require("socket.io")(serv,{});
 
 app.get("/",function(req,res){
     res.sendFile(__dirname + "/client/index.html")
@@ -32,7 +33,6 @@ var Entity=function(){
 }
 
 var Player = function(id){
-    console.log(id);
     var self= Entity();
     self.id=id;
     self.number = "" + Math.floor(10 * Math.random());
@@ -136,10 +136,27 @@ Bullet.update = function(){
     return pack;
 }
 
-var io = require("socket.io")(serv,{});
+
 io.sockets.on("connection",function(socket){
     socket.id = Math.random();
     SOCKET__LIST[socket.id]=socket;
+    
+     // To subscribe the socket to a given channel
+     socket.on('join', function (data) {
+       socket.join(data.username);
+     });
+
+     // To keep track of online users
+     socket.on('userPresence', function (data) {
+       onlineUsers[socket.id] = {
+         username: data.username
+       };
+       socket.broadcast.emit('onlineUsers', onlineUsers);
+     });
+     // For message passing
+ socket.on('message', function (data) {
+   io.sockets.to(data.toUsername).emit('message', data.data);
+ });
     
     Player.onConnect(socket);
  

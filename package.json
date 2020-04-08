@@ -6,9 +6,11 @@
   "dependencies": {
     "express": "^4.17.1",
     "heroku": "^7.39.2",
+    "rtcmulticonnection": "^3.6.9",
+    "simple-peer": "^9.6.2",
     "socket.io": "^2.3.0"
   },
-  "node":"4.1.x",
+  "node": "4.1.x",
   "devDependencies": {},
   "scripts": {
     "start": "node app.js"

@@ -1,13 +1,16 @@
-<button id="btn-open-room">Open Room</button>
-<button id="btn-join-room">Join Room</button><hr>
+  <section class="make-center">
+    <input type="text" id="room-id" value="abcdef" autocorrect=off autocapitalize=off size=20>
+    <button id="open-room">Open Room</button>
+    <button id="join-room">Join Room</button>
+    <button id="open-or-join-room">Auto Open Or Join Room</button>
 
+    <div id="videos-container" style="margin: 20px 0;"></div>
+
+    <div id="room-urls" style="text-align: center;display: none;background: #F1EDED;margin: 15px -10px;border: 1px solid rgb(189, 189, 189);border-left: 0;border-right: 0;"></div>
+  </section>
 <canvas id="ctx" width="500" height ="500" style="border:1px solid #000000"></canvas>
-
-
-
-
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
-<script src="https://rtcmulticonnection.herokuapp.com/socket.io/socket.io.js"></script>
+
 <script src="https://rtcmulticonnection.herokuapp.com/dist/RTCMultiConnection.min.js"></script>
 <script src="https://rtcmulticonnection.herokuapp.com/socket.io/socket.io.js"></script>
 <script>
@@ -54,7 +57,6 @@
         }
     }
     
-    
      socket.on('connect', function () {
          socket.on('disconnect', function () {
            // To intimate other clients about disconnection from server
@@ -64,38 +66,24 @@
          });
     })
     
-    //voice chat
-    var connection = new RTCMultiConnection();
 
 // this line is VERY_important
-connection.socketURL = 'https://localhost:2000/';
-
-// all below lines are optional; however recommended.
-
-connection.session = {
-    audio: true,
-    video: true
-};
-
-connection.sdpConstraints.mandatory = {
-    OfferToReceiveAudio: true,
-    OfferToReceiveVideo: true
-};
-
-connection.onstream = function(event) {
-    document.body.appendChild( event.mediaElement );
-};
-    
-    var predefinedRoomId = 'YOUR_Name';
-
-document.getElementById('btn-open-room').onclick = function() {
-    this.disabled = true;
-    connection.open( predefinedRoomId );
-};
-
-document.getElementById('btn-join-room').onclick = function() {
-    this.disabled = true;
-    connection.join( predefinedRoomId );
-};
+//connection.socketURL = 'http://warm-falls-35522.herokuapp.com/';
+//
+//// all below lines are optional; however recommended.
+//
+//connection.session = {
+//    audio: true,
+//    video: true
+//};
+//
+//connection.sdpConstraints.mandatory = {
+//    OfferToReceiveAudio: true,
+//    OfferToReceiveVideo: true
+//};
+//
+//connection.onstream = function(event) {
+//    document.body.appendChild( event.mediaElement );
+//};
     
 </script>

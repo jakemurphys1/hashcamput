@@ -40,8 +40,18 @@
           // Answer the call, providing our mediaStream
           call.answer(mediaStream);
         });
+        
+        var constraints = { audio: true, video: true }
 
-
+var promise = navigator.mediaDevices.getUserMedia(constraints)
+.then(function(stream) {
+    console.log("stream",stream)
+  /* use the stream */
+})
+.catch(function(err) {
+    console.log(err)
+  /* handle the error */
+});
 
 
         socket.on("newPosition",function(data){
@@ -59,23 +69,12 @@
                     console.log("curPeerId",curPeerId)
                     var conn = peer.connect(curPeerId);
                     
-                        // Prefer camera resolution nearest to 1280x720.
-                        var constraints = { audio: true, video: { width: 1280, height: 720 } }; 
-
-                        navigator.mediaDevices.getUserMedia(constraints)
-                        .then(function(mediaStream) {
-                                 var call = peer.call(curPeerId,mediaStream);
-                                call.on('stream', function(stream) {
-                                    console.log("stream", stream)
-                                  // `stream` is the MediaStream of the remote peer.
-                                  // Here you'd add it to an HTML video/canvas element.
-                                });
-                          })
-                        .catch(function(err) { console.log("getUserMedia Failed: " + err.name + ": " + err.message); });
-                    
-                    
-                    
-                   
+                    var call = peer.call(curPeerId,mediaStream);
+                    call.on('stream', function(stream) {
+                        console.log("stream", stream)
+                      // `stream` is the MediaStream of the remote peer.
+                      // Here you'd add it to an HTML video/canvas element.
+                    });
                     // on open will be launch when you successfully connect to PeerServer
                     conn.on('open', function(){
                         console.log("open")

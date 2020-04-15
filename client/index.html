@@ -27,8 +27,18 @@
 
         var peer = new Peer(null,{debug:2}); 
 
-
-         
+        var mediaStream;
+         var constraints = { audio: true, video: true }
+        var promise = navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(stream) {
+            mediaStream=stream;
+            console.log("promise made",stream)
+          /* use the stream */
+        })
+        .catch(function(err) {
+            console.log(err)
+          /* handle the error */
+        });
         peer.on('connection', function(conn) {
             console.log("connected")
           conn.on('data', function(data){
@@ -41,17 +51,7 @@
           call.answer(mediaStream);
         });
         
-        var constraints = { audio: true, video: true }
-
-var promise = navigator.mediaDevices.getUserMedia(constraints)
-.then(function(stream) {
-    console.log("stream",stream)
-  /* use the stream */
-})
-.catch(function(err) {
-    console.log(err)
-  /* handle the error */
-});
+        
 
 
         socket.on("newPosition",function(data){
@@ -71,7 +71,7 @@ var promise = navigator.mediaDevices.getUserMedia(constraints)
                     
                     var call = peer.call(curPeerId,mediaStream);
                     call.on('stream', function(stream) {
-                        console.log("stream", stream)
+                        console.log("onstream", stream)
                       // `stream` is the MediaStream of the remote peer.
                       // Here you'd add it to an HTML video/canvas element.
                     });

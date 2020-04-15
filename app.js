@@ -71,6 +71,7 @@ Player.list = {};
 
 Player.onConnect = function(socket){
     var player = Player(socket.id);
+    
     socket.on("keyPress",function(data){
         if(data.inputId==="left"){
             player.pressingLeft=data.state;
@@ -94,47 +95,48 @@ Player.update = function(){
         pack.push({
             x:player.x,
             y:player.y,
-            number:player.number
+            number:player.number,
+            peerId:player.peerId
         })
     }
      return pack;
 }
 
-var Bullet = function(angle){
-    var self = Entity();
-    self.id = Math.random();
-    self.spdX = Math.cos(angle/180*Math.PI) * 10;
-    self.spdY = Math.sin(angle/180*Math.PI) * 10;
-    
-    self.timer = 0;
-    self.toRemove = false;
-    var super_update = self.update;
-    self.update = function(){
-        if(self.timer++>100){
-            self.toRemove=true;
-        }
-        super_update();
-    }
-    Bullet.list[self.id]=self;
-    return self;
-}
-Bullet.list = {};
-Bullet.update = function(){
-    if(Math.random()<0.1){
-        Bullet(Math.random()*360);
-    }
-    
-    var pack=[];
-    for(var i in Bullet.list){
-        var bullet = Bullet.list[i];
-        bullet.update();
-        pack.push({
-            x:bullet.x,
-            y:bullet.y
-        })
-    }
-    return pack;
-}
+//var Bullet = function(angle){
+//    var self = Entity();
+//    self.id = Math.random();
+//    self.spdX = Math.cos(angle/180*Math.PI) * 10;
+//    self.spdY = Math.sin(angle/180*Math.PI) * 10;
+//    
+//    self.timer = 0;
+//    self.toRemove = false;
+//    var super_update = self.update;
+//    self.update = function(){
+//        if(self.timer++>100){
+//            self.toRemove=true;
+//        }
+//        super_update();
+//    }
+//    Bullet.list[self.id]=self;
+//    return self;
+//}
+//Bullet.list = {};
+//Bullet.update = function(){
+//    if(Math.random()<0.1){
+//        Bullet(Math.random()*360);
+//    }
+//    
+//    var pack=[];
+//    for(var i in Bullet.list){
+//        var bullet = Bullet.list[i];
+//        bullet.update();
+//        pack.push({
+//            x:bullet.x,
+//            y:bullet.y
+//        })
+//    }
+//    return pack;
+//}
 
 
 io.sockets.on("connection",function(socket){
@@ -143,20 +145,10 @@ io.sockets.on("connection",function(socket){
     
      // To subscribe the socket to a given channel
      socket.on('join', function (data) {
-       socket.join(data.username);
+      Player.list[socket.id].peerId = data.id;
+         sendPeerIds()
+         console.log(Player.list)
      });
-
-     // To keep track of online users
-     socket.on('userPresence', function (data) {
-       onlineUsers[socket.id] = {
-         username: data.username
-       };
-       socket.broadcast.emit('onlineUsers', onlineUsers);
-     });
-     // For message passing
- socket.on('message', function (data) {
-   io.sockets.to(data.toUsername).emit('message', data.data);
- });
     
     Player.onConnect(socket);
  
@@ -167,10 +159,23 @@ io.sockets.on("connection",function(socket){
     })
 });
 
+function sendPeerIds(){
+    var pack=[];
+    for(var i in Player.list){
+        var player = Player.list[i];
+        pack.push({
+            peerId:player.peerId
+        })
+    }
+    for(var i in SOCKET__LIST){
+            var socket = SOCKET__LIST[i];
+            socket.emit("peerId",pack)
+        }
+}
+
 setInterval(function(){
     var pack = {
         player:Player.update(),
-        bullet:Bullet.update()
     }
 
     for(var i in SOCKET__LIST){

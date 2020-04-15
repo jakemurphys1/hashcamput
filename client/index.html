@@ -11,79 +11,123 @@
 <canvas id="ctx" width="500" height ="500" style="border:1px solid #000000"></canvas>
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 
+<script src="https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js"></script>
+
 <script src="https://rtcmulticonnection.herokuapp.com/dist/RTCMultiConnection.min.js"></script>
 <script src="https://rtcmulticonnection.herokuapp.com/socket.io/socket.io.js"></script>
 <script>
-    var chatText = document.getElementById("chat-text");
-    var chatInput = document.getElementById("chat-input");
-    var chatForm = document.getElementById("chat-form");
-    
-    var ctx = document.getElementById("ctx").getContext("2d");
-    ctx.font="30px Arial";
-    var socket = io("/", {transports:['websocket']});
-    
-    socket.on("newPosition",function(data){
-        ctx.clearRect(0,0,500,500);
-        for(var i = 0;i<data.player.length;i++){
-            ctx.fillText(data.player[i].number,data.player[i].x,data.player[i].y);
-        } 
-        for(var i = 0;i<data.bullet.length;i++){
-            ctx.fillRect(data.bullet[i].x-5,data.bullet[i].y-5,10,10);
-        } 
-    });
-    
-    
-    document.onkeydown = function(event){
-        if(event.keyCode ===68){
-            socket.emit("keyPress",{inputId:"right",state:true});
-        }else if(event.keyCode ===83){
-            socket.emit("keyPress",{inputId:"down",state:true});
-        }else if(event.keyCode ===65){
-            socket.emit("keyPress",{inputId:"left",state:true});
-        }else if(event.keyCode ===87){
-            socket.emit("keyPress",{inputId:"up",state:true});
-        }
-    }
-    document.onkeyup = function(event){
-        if(event.keyCode ===68){
-            socket.emit("keyPress",{inputId:"right",state:false});
-        }else if(event.keyCode ===83){
-            console.log("down")
-            socket.emit("keyPress",{inputId:"down",state:false});
-        }else if(event.keyCode ===65){
-            socket.emit("keyPress",{inputId:"left",state:false});
-        }else if(event.keyCode ===87){
-            socket.emit("keyPress",{inputId:"up",state:false});
-        }
-    }
-    
-     socket.on('connect', function () {
-         socket.on('disconnect', function () {
-           // To intimate other clients about disconnection from server
-           socket.emit('disconnect', {
-             username: "Jake"
-           });
-         });
-    })
-    
+    (function(){
+        var chatText = document.getElementById("chat-text");
+        var chatInput = document.getElementById("chat-input");
+        var chatForm = document.getElementById("chat-form");
 
-// this line is VERY_important
-//connection.socketURL = 'http://warm-falls-35522.herokuapp.com/';
-//
-//// all below lines are optional; however recommended.
-//
-//connection.session = {
-//    audio: true,
-//    video: true
-//};
-//
-//connection.sdpConstraints.mandatory = {
-//    OfferToReceiveAudio: true,
-//    OfferToReceiveVideo: true
-//};
-//
-//connection.onstream = function(event) {
-//    document.body.appendChild( event.mediaElement );
-//};
+        var ctx = document.getElementById("ctx").getContext("2d");
+        ctx.font="30px Arial";
+        var socket = io("/", {transports:['websocket']});
+
+        var peer = new Peer(null,{debug:2}); 
+
+
+         
+        peer.on('connection', function(conn) {
+            console.log("connected")
+          conn.on('data', function(data){
+            // Will print 'hi!'
+            console.log(data);
+          });
+        });
+        peer.on('call', function(call) {
+          // Answer the call, providing our mediaStream
+          call.answer(mediaStream);
+        });
+
+
+
+
+        socket.on("newPosition",function(data){
+            ctx.clearRect(0,0,500,500);
+            for(var i = 0;i<data.player.length;i++){
+                ctx.fillText(data.player[i].number,data.player[i].x,data.player[i].y);
+            } 
+        });
+        
+        socket.on("peerId",function(data){
+            for(var i =0;i<data.length;i++){
+                var curPeerId = data[i].peerId
+                console.log("personelPeerId", personelPeerId)
+                if(personelPeerId && curPeerId!=personelPeerId){
+                    console.log("curPeerId",curPeerId)
+                    var conn = peer.connect(curPeerId);
+                    
+                        // Prefer camera resolution nearest to 1280x720.
+                        var constraints = { audio: true, video: { width: 1280, height: 720 } }; 
+
+                        navigator.mediaDevices.getUserMedia(constraints)
+                        .then(function(mediaStream) {
+                                 var call = peer.call(curPeerId,mediaStream);
+                                call.on('stream', function(stream) {
+                                    console.log("stream", stream)
+                                  // `stream` is the MediaStream of the remote peer.
+                                  // Here you'd add it to an HTML video/canvas element.
+                                });
+                          })
+                        .catch(function(err) { console.log("getUserMedia Failed: " + err.name + ": " + err.message); });
+                    
+                    
+                    
+                   
+                    // on open will be launch when you successfully connect to PeerServer
+                    conn.on('open', function(){
+                        console.log("open")
+                      // here you have conn.id
+                      conn.send('hi! my Id is ' + personelPeerId);
+                    });
+                }
+            }
+        });
+        document.onkeydown = function(event){
+            if(event.keyCode ===68){
+                socket.emit("keyPress",{inputId:"right",state:true});
+            }else if(event.keyCode ===83){
+                socket.emit("keyPress",{inputId:"down",state:true});
+            }else if(event.keyCode ===65){
+                socket.emit("keyPress",{inputId:"left",state:true});
+            }else if(event.keyCode ===87){
+                socket.emit("keyPress",{inputId:"up",state:true});
+            }
+        }
+        document.onkeyup = function(event){
+            if(event.keyCode ===68){
+                socket.emit("keyPress",{inputId:"right",state:false});
+            }else if(event.keyCode ===83){
+                console.log("down")
+                socket.emit("keyPress",{inputId:"down",state:false});
+            }else if(event.keyCode ===65){
+                socket.emit("keyPress",{inputId:"left",state:false});
+            }else if(event.keyCode ===87){
+                socket.emit("keyPress",{inputId:"up",state:false});
+            }
+        }
+        
+        
+        var personelPeerId;
+         socket.on('connect', function () {
+                peer.on('open', function(id) {
+                    socket.emit('join',{"id":id})
+                    personelPeerId=id;
+                  console.log('My peer ID is: ' + id);
+                });
+             
+             socket.on('disconnect', function () {
+               // To intimate other clients about disconnection from server
+               socket.emit('disconnect', {
+                 username: "Jake"
+               });
+             });
+             
+             
+        })
+    })()
+    
     
 </script>
